@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Todo List</h1>
+
+    <div class="task-input-container">
+      <input type="text" id="taskInput" placeholder="Enter a new task">
+      <button onclick="addTask()">Add Task</button>
+    </div>
+
+    <div id="tasks" class="task-list"></div>
+  </div>
+
+  <script>
+    const apiUrl = 'http://localhost:3000/tasks';  // Update with your backend URL
+
+    async function fetchTasks() {
+      const response = await fetch(apiUrl);
+      const tasks = await response.json();
+      document.getElementById('tasks').innerHTML = tasks.map(task => `
+        <div class="task">
+          <input type="text" id="task-${task.id}" value="${task.name}">
+          <div class="task-actions">
+            <button class="btn update" onclick="updateTask(${task.id})">Update</button>
+            <button class="btn delete" onclick="deleteTask(${task.id})">Delete</button>
+          </div>
+        </div>`).join('');
+    }
+
+    async function addTask() {
+      const taskName = document.getElementById('taskInput').value;
+      await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: taskName })
+      });
+      document.getElementById('taskInput').value = '';  // Clear input
+      fetchTasks();  // Reload tasks
+    }
+
+    async function updateTask(id) {
+      const updatedName = document.getElementById(`task-${id}`).value;
+      await fetch(`${apiUrl}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: updatedName })
+      });
+      fetchTasks();
+    }
+
+    async function deleteTask(id) {
+      await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+      fetchTasks();
+    }
+
+    fetchTasks();  // Initial fetch
+  </script>
+</body>
+</html>
